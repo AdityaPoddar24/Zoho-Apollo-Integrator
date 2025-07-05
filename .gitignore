@@ -1,0 +1,38 @@
+.env
+.env.*           # any other env files
+*.env
+
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Poetry & virtual‐env
+.poetry/         # if you ever cache a local copy
+*/.venv/         # if you create an in‐repo venv
+.venv/
+
+# SQLAlchemy / Alembic
+migrations/versions/*.pyc
+
+# Celery / logs
+celerybeat-schedule
+
+# Test caches
+.pytest_cache/
+.cache/
+.coverage
+
+# IDEs & editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+*.log
+docker-compose.override.yaml
+
+# OS files
+.DS_Store
+Thumbs.db

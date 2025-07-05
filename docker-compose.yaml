@@ -1,0 +1,37 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CELERY_BROKER_URL=${REDIS_URL}
+    env_file: .env
+    depends_on:
+      - mysql
+      - redis
+    ports: ["8000:8000"]
+
+  worker:
+    build: .
+    command: celery -A tasks worker -Q enrich --loglevel=info
+    env_file: .env
+    depends_on: [mysql, redis]
+
+  beat:
+    build: .
+    command: celery -A tasks beat --loglevel=info
+    env_file: .env
+    depends_on: [redis]
+
+  mysql:
+    image: mysql:8.4
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: apollo
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports: ["3306:3306"]
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
