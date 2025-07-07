@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from settings import get_settings
+from app.core.settings import get_settings
 
 settings = get_settings()
 engine = create_engine(

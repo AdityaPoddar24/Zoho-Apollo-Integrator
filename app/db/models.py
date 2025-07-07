@@ -91,6 +91,7 @@ class OrganizationDetails(Base):
     updated_at:      Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    raw_json = mapped_column(JSON)
 
 class Person(Base):
     __tablename__ = "people"
@@ -107,10 +108,15 @@ class Person(Base):
     location_country: Mapped[str | None] = mapped_column(String(64))
     is_enriched:      Mapped[bool] = mapped_column(Boolean, default=False)
     enriched_at:      Mapped[datetime | None]
+    personal_email:             Mapped[str | None]= mapped_column(String(255), nullable=True)
+    personal_phone:             Mapped[str | None]= mapped_column(String(64),  nullable=True)
+    phone_verification_status:  Mapped[str | None]= mapped_column(String(32),  nullable=True)
+    phones_raw_json:            Mapped[list | None]= mapped_column(JSON,         nullable=True)
     created_at:       Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at:       Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
 
     details = relationship("PersonDetails", uselist=False, back_populates="person")
 
@@ -149,6 +155,7 @@ class PersonDetails(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    raw_json = mapped_column(JSON)
 
 class CompanyPeople(Base):
     __tablename__ = "company_people"
@@ -159,3 +166,49 @@ class CompanyPeople(Base):
     person_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("people.id", ondelete="CASCADE")
     )
+
+class CompanySearchRun(Base):
+    """
+    One row per POST /mixed_companies/search call you make.
+    Stores breadcrumbs, pagination, etc.
+    """
+    __tablename__ = "company_search_runs"
+
+    id              = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    query_name      = mapped_column(String(255))        # original company_name
+    partial_results = mapped_column(Boolean)
+    page            = mapped_column(Integer)
+    per_page        = mapped_column(Integer)
+    total_entries   = mapped_column(Integer)
+    total_pages     = mapped_column(Integer)
+    raw_json        = mapped_column(JSON)
+    created_at      = mapped_column(DateTime, default=datetime.utcnow)
+
+    # relationship to the individual hits
+    results = relationship("CompanySearchResults", back_populates="run")
+
+class CompanySearchResults(Base):
+    """
+    One row per organization returned *on the first page*.
+    We’ll insert only the FIRST hit we actually use, but the schema
+    can hold more if you want later.
+    """
+    __tablename__ = "company_search_results"
+
+    id              = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    run_id          = mapped_column(BigInteger, ForeignKey("company_search_runs.id", ondelete="CASCADE"))
+    company_id      = mapped_column(BigInteger, ForeignKey("companies.id", ondelete="SET NULL"), nullable=True)
+    apollo_org_id   = mapped_column(String(40))
+    name            = mapped_column(String(255))
+    primary_domain  = mapped_column(String(255))
+    website_url     = mapped_column(String(255))
+    logo_url        = mapped_column(String(255))
+    phone           = mapped_column(String(64))
+    founded_year    = mapped_column(Integer)
+    publicly_traded_symbol   = mapped_column(String(20))
+    publicly_traded_exchange = mapped_column(String(20))
+    alexa_ranking   = mapped_column(Integer)
+    matched_at      = mapped_column(DateTime, default=datetime.utcnow)
+    raw_json        = mapped_column(JSON)
+
+    run     = relationship("CompanySearchRun", back_populates="results")

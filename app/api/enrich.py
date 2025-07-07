@@ -5,7 +5,7 @@ import logging
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
 
-from tasks import enrich_company
+from app.tasks import enrich_company
 
 log = logging.getLogger("api")
 router = APIRouter()
