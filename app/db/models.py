@@ -97,8 +97,8 @@ class Person(Base):
     __tablename__ = "people"
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     apollo_person_id: Mapped[str | None] = mapped_column(String(40), unique=True)
-    first_name:       Mapped[str] = mapped_column(String(128))
-    last_name:        Mapped[str] = mapped_column(String(128))
+    first_name:       Mapped[str | None] = mapped_column(String(128), nullable=True)
+    last_name:        Mapped[str | None] = mapped_column(String(128), nullable=True)
     title:            Mapped[str | None] = mapped_column(String(255))
     seniority:        Mapped[str | None] = mapped_column(String(64))
     email:            Mapped[str | None] = mapped_column(String(255))
@@ -116,6 +116,7 @@ class Person(Base):
     updated_at:       Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    company_name:  Mapped[str | None] = mapped_column(String(255), nullable=True)
 
 
     details = relationship("PersonDetails", uselist=False, back_populates="person")
@@ -127,25 +128,25 @@ class PersonDetails(Base):
     )
     person = relationship("Person", back_populates="details")
 
-    photo_url:         Mapped[str | None] = mapped_column(String(255))
-    linkedin_url_full: Mapped[str | None] = mapped_column(String(255))
+    photo_url:         Mapped[str | None] = mapped_column(String(512))
+    linkedin_url_full: Mapped[str | None] = mapped_column(String(512))
     headline:          Mapped[str | None] = mapped_column(String(255))
     email_status:      Mapped[str | None] = mapped_column(String(32))
-    twitter_url:       Mapped[str | None] = mapped_column(String(255))
-    github_url:        Mapped[str | None] = mapped_column(String(255))
-    facebook_url:      Mapped[str | None] = mapped_column(String(255))
+    twitter_url:       Mapped[str | None] = mapped_column(String(512))
+    github_url:        Mapped[str | None] = mapped_column(String(512))
+    facebook_url:      Mapped[str | None] = mapped_column(String(512))
     extrapolated_email_confidence: Mapped[str | None] = mapped_column(String(32))
     contact_id:        Mapped[str | None] = mapped_column(String(40))
     contact_blob:      Mapped[dict | None] = mapped_column(JSON)
-    revealed_for_current_team: Mapped[bool | None]
-    is_likely_to_engage:      Mapped[bool | None]
+    revealed_for_current_team: Mapped[bool | None] = mapped_column(Boolean, default=False)
+    is_likely_to_engage:      Mapped[bool | None] = mapped_column(Boolean, default=False)
     intent_strength:          Mapped[str | None] = mapped_column(String(64))
-    show_intent:              Mapped[bool | None]
+    show_intent:              Mapped[bool | None] = mapped_column(Boolean, default=False)
     departments:              Mapped[list | None] = mapped_column(JSON)
     subdepartments:           Mapped[list | None] = mapped_column(JSON)
     functions:                Mapped[list | None] = mapped_column(JSON)
     contact_emails:           Mapped[list | None] = mapped_column(JSON)
-    phone_numbers:            Mapped[list | None] = mapped_column(JSON)
+    phone_numbers:            Mapped[str | None] = mapped_column(String(64), nullable=True)
     typed_custom_fields:      Mapped[dict | None] = mapped_column(JSON)
     country:                  Mapped[str | None] = mapped_column(String(128))
     state:                    Mapped[str | None] = mapped_column(String(128))
@@ -156,6 +157,8 @@ class PersonDetails(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
     raw_json = mapped_column(JSON)
+    webhook_respomse_json = mapped_column(JSON)
+    webhook_phone_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 class CompanyPeople(Base):
     __tablename__ = "company_people"

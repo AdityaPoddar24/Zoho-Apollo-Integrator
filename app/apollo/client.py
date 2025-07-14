@@ -48,20 +48,34 @@ class ApolloClient:
         *,
         domain: str,
         seniorities: list[str],
+        titles: list[str] | None = None,
         page: int = 1,
-        per_page: int = 10,
+        per_page: int = 100,
     ) -> dict:
         """
-        Calls POST /mixed_people/search, filtering by organization domain
-        and a list of person seniorities (e.g. ['founder', 'c_suite', 'vp']).
+        POST /mixed_people/search but send filters as repeated query-params:
+          - person_seniorities[]=...
+          - q_organization_domains_list[]=...
         """
-        payload = {
-            "organization_domains": [domain],
-            "person_seniorities": seniorities,
-            "page": page,
-            "per_page": per_page,
-        }
-        return self._call("POST", "/mixed_people/search", json=payload)
+        # build a list of 2-tuples so requests will repeat the key
+        params: list[tuple[str,str]] = []
+        # Title filters
+        if titles:
+            for t in titles:
+                params.append(("person_titles[]", t))
+
+        for s in seniorities:
+            params.append(("person_seniorities[]", s))
+        
+        params.append(("q_organization_domains_list[]", domain))
+
+        # pagination
+        params.append(("page", str(page)))
+        params.append(("per_page", str(per_page)))
+
+        print("Params for people search api call",params)
+
+        return self._call("POST", "/mixed_people/search", params=params)
 
     def enrich_person_async(
         self,
@@ -84,6 +98,8 @@ class ApolloClient:
         # **scope by your company’s domain**  
         if domain:
             payload["domain"] = domain
+        
+        print(payload)
 
         return self._call("POST", "/people/match", json=payload)
     
